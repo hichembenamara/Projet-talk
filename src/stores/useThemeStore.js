@@ -1,39 +1,27 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { persist } from 'zustand/middleware';
 
-// Détecter le thème initial du système
-const getInitialTheme = () => {
-  if (typeof window !== 'undefined') {
-    const savedTheme = localStorage.getItem('theme-storage');
-    if (savedTheme) {
-      try {
-        return JSON.parse(savedTheme).state.theme;
-      } catch {
-        // En cas d'erreur de parsing, on continue avec la détection
-      }
-    }
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  }
-  return 'light';
-};
-
+// Création du store pour le thème
 const useThemeStore = create(
   persist(
     (set, get) => ({
-      theme: getInitialTheme(),
-      toggleTheme: () => {
-        const newTheme = get().theme === 'light' ? 'dark' : 'light';
-        set({ theme: newTheme });
-      },
+      // État initial basé sur la préférence système ou 'light' par défaut
+      theme: typeof window !== 'undefined' 
+        ? window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        : 'light',
+      
+      // Fonction pour basculer entre les thèmes
+      toggleTheme: () => set({ 
+        theme: get().theme === 'light' ? 'dark' : 'light' 
+      }),
+      
+      // Fonction pour définir directement un thème
       setTheme: (theme) => set({ theme })
     }),
     {
-      name: 'theme-storage',
-      storage: createJSONStorage(() => localStorage),
-      version: 1,
-      partialize: (state) => ({ theme: state.theme })
+      name: 'theme-storage', // Nom dans localStorage
     }
   )
 );
 
-export default useThemeStore; 
+export default useThemeStore;
